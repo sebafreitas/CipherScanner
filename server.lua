@@ -15,6 +15,17 @@ local function FileExt(filename)
     end
 end
 
+local function SaveResourceFile(resource_name, file_path, content, mode)
+    local full_path = ("%s/%s/%s"):format(GetResourcePath(resource_name), resource_name, file_path)
+    local file = io.open(full_path, mode or "w")
+    if file then
+        file:write(content)
+        file:close()
+    else
+        print("Failed to open file for writing:", full_path)
+    end
+end
+
 local function ScanDir(resource_name, res_directory, file_name)
     local folder_files = file_name
     local dir = res_directory .. "/" .. folder_files
@@ -99,3 +110,4 @@ CreateThread(function()
     Wait(100)
     InitCipherScanner()
 end)
+
