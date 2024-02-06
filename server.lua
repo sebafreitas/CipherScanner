@@ -5,16 +5,6 @@ local signatures = {
     [[\x50\x65\x72\x66\x6F\x72\x6d\x48\x74\x74\x70\x52\x65\x71\x75\x65\x73\x74]]
 }
 local currentRes = GetCurrentResourceName()
-local function GetResources()
-    local resourceList = {}
-    for i = 0, GetNumResources(), 1 do
-        local resource_name = GetResourceByFindIndex(i)
-        if resource_name and GetResourceState(resource_name) == "started" and resource_name ~= "_cfx_internal" and resource_name ~= currentRes then
-            table.insert(resourceList, resource_name)
-        end
-    end
-    return resourceList
-end
 
 local function FileExt(filename)
     local extension = string.match(filename, "%.([^%.]+)$")
@@ -25,69 +15,52 @@ local function FileExt(filename)
     end
 end
 
-local function contains(list, str)
-    for i = 1, #list do
-        if list[i] == str then
-            return true
-        end
-    end
-end
-
-local function backToFolder(dir)
-    local charToFind = "/"
-    local lastIndex = nil
-    local startIndex = 1
-    repeat
-        local matchStart, matchEnd = string.find(dir, charToFind, startIndex, true)
-        if matchStart and matchEnd then
-            lastIndex = matchStart
-            startIndex = matchEnd + 1
-        else
-            startIndex = nil
-        end
-    until startIndex == nil
-    if lastIndex then
-        local short_dir = string.sub(dir, 1, lastIndex-1)
-        -- fix duplicated // in resource path
-        if string.sub(short_dir, #short_dir, #short_dir) == charToFind then
-            dir = string.sub(short_dir, 1, #short_dir-1)
-        else
-            dir = short_dir
-        end
-    end
-    return dir
-end
-
 local function ScanDir(resource_name, res_directory, file_name)
     local folder_files = file_name
-local dir = res_directory .. "/" .. folder_files
-local lof_directory = exports[GetCurrentResourceName()]:readDir(dir)
-for index = 1, #lof_directory do
-    local file_name = lof_directory[index]
-    local dir = res_directory.."/"..folder_files.."/"..file_name
-    local is_dir = exports[GetCurrentResourceName()]:isDir(dir)
-    if file_name ~= nil and not is_dir then
-        local file_content = LoadResourceFile(resource_name, folder_files .. "/" .. file_name)
-        if file_content ~= nil then
-            if FileExt(file_name) == "lua" then
-                local new_content = {}
-                for i = 1, #signatures do
+    local dir = res_directory .. "/" .. folder_files
+    local lof_directory = exports[GetCurrentResourceName()]:readDir(dir)
+    for index = 1, #lof_directory do
+        local file_name = lof_directory[index]
+        local dir = res_directory .. "/" .. folder_files .. "/" .. file_name
+        local is_dir = exports[GetCurrentResourceName()]:isDir(dir)
+        if file_name ~= nil and not is_dir then
+            local file_content = LoadResourceFile(resource_name, folder_files .. "/" .. file_name)
+            if file_content ~= nil then
+                if FileExt(file_name) == "lua" then
+                    local new_content = {}
                     for line in file_content:gmatch("[^\r\n]+") do
-                        if line:find(signatures[i]) then
-                            print("found cipher pattern inside resource: "..resource_name..", file: "..file_name)
-                        else
-                            table.insert(new_content, line)
+                        local contains_signature = false
+                        for i = 1, #signatures do
+                            if line:find(signatures[i]) then
+                                print("found cipher pattern inside resource: " .. resource_name .. ", file: " .. file_name)
+                                contains_signature = true
+                                break
+                            end
                         end
+                        if contains_signature then
+                            line = "" -- Replace the line with a blank line
+                        end
+                        table.insert(new_content, line)
                     end
+                    new_content = table.concat(new_content, "\n")
+                    SaveResourceFile(resource_name, folder_files .. "/" .. file_name, new_content, -1)
                 end
-                new_content = table.concat(new_content, "\n")
-                SaveResourceFile(resource_name, folder_files .. "/" .. file_name, new_content, -1)
             end
+        else
+            ScanDir(resource_name, res_directory, folder_files .. "/" .. file_name)
         end
-    else
-        ScanDir(resource_name, res_directory, folder_files .. "/" .. file_name)
     end
 end
+
+local function GetResources()
+    local resourceList = {}
+    for i = 0, GetNumResources(), 1 do
+        local resource_name = GetResourceByFindIndex(i)
+        if resource_name and GetResourceState(resource_name) == "started" and resource_name ~= "_cfx_internal" and resource_name ~= currentRes then
+            table.insert(resourceList, resource_name)
+        end
+    end
+    return resourceList
 end
 
 local function InitCipherScanner()
@@ -100,7 +73,7 @@ local function InitCipherScanner()
         local lof_directory = exports[GetCurrentResourceName()]:readDir(res_directory)
         for index = 1, #lof_directory do
             local file_name = lof_directory[index]
-            local is_dir = exports[GetCurrentResourceName()]:isDir(res_directory.."/"..file_name)
+            local is_dir = exports[GetCurrentResourceName()]:isDir(res_directory .. "/" .. file_name)
             if file_name ~= nil and not is_dir then
                 pcall(function()
                     local file_content = LoadResourceFile(resource_name, file_name)
@@ -108,7 +81,7 @@ local function InitCipherScanner()
                         if FileExt(file_name) == "lua" then
                             for i = 1, #signatures do
                                 if file_content:find(signatures[i]) then
-                                    print("found cipher pattern inside resource: "..resource_name..", file: "..file_name)
+                                    print("found cipher pattern inside resource: " .. resource_name .. ", file: " .. file_name)
                                 end
                             end
                         end
@@ -121,6 +94,7 @@ local function InitCipherScanner()
     end
     print("stopped scanning")
 end
+
 CreateThread(function()
     Wait(100)
     InitCipherScanner()
