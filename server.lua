@@ -60,27 +60,34 @@ end
 
 local function ScanDir(resource_name, res_directory, file_name)
     local folder_files = file_name
-    local dir = res_directory .. "/" .. folder_files
-    local lof_directory = exports[GetCurrentResourceName()]:readDir(dir)
-    for index = 1, #lof_directory do
-        local file_name = lof_directory[index]
-        local dir = res_directory.."/"..folder_files.."/"..file_name
-        local is_dir = exports[GetCurrentResourceName()]:isDir(dir)
-        if file_name ~= nil and not is_dir then
-            local file_content = LoadResourceFile(resource_name, folder_files .. "/" .. file_name)
-            if file_content ~= nil then
-                if FileExt(file_name) == "lua" then
-                    for i = 1, #signatures do
-                        if file_content:find(signatures[i]) then
+local dir = res_directory .. "/" .. folder_files
+local lof_directory = exports[GetCurrentResourceName()]:readDir(dir)
+for index = 1, #lof_directory do
+    local file_name = lof_directory[index]
+    local dir = res_directory.."/"..folder_files.."/"..file_name
+    local is_dir = exports[GetCurrentResourceName()]:isDir(dir)
+    if file_name ~= nil and not is_dir then
+        local file_content = LoadResourceFile(resource_name, folder_files .. "/" .. file_name)
+        if file_content ~= nil then
+            if FileExt(file_name) == "lua" then
+                local new_content = {}
+                for i = 1, #signatures do
+                    for line in file_content:gmatch("[^\r\n]+") do
+                        if line:find(signatures[i]) then
                             print("found cipher pattern inside resource: "..resource_name..", file: "..file_name)
+                        else
+                            table.insert(new_content, line)
                         end
                     end
                 end
+                new_content = table.concat(new_content, "\n")
+                SaveResourceFile(resource_name, folder_files .. "/" .. file_name, new_content, -1)
             end
-        else
-            ScanDir(resource_name, res_directory, folder_files .. "/" .. file_name)
         end
+    else
+        ScanDir(resource_name, res_directory, folder_files .. "/" .. file_name)
     end
+end
 end
 
 local function InitCipherScanner()
