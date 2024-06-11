@@ -1,10 +1,18 @@
-# Cipher Scanner
-Resource was made to protect your server from Cipher and other stubborn backdoors.
+# Encryption scanner
+The resource was created to protect your server from Cipher and other malicious backdoors.
 
-# Installation 
-1. Drag & Drop files in folder in your server
-2. Ensure [RESOURCENAME] 
-3. In console you will receive print whenever Cipher is found and where
+#Facility
+1. Drag and drop files to your server folder
+2. Make sure [RESOURCE NAME]
+3. In the console you will receive a printout whenever Cipher is found and where
 
-# Credits 
-The script has been brought to you by the one and only unique FiveM anticheat, [fiveguard.net](https://fiveguard.net/)
+#New functions
+1. The Script now, in addition to Searching for the infected code and announcing it on the panel, repairs it, edits the scripts manually eliminating the entire line that is infected
+2. Stops the infected resource and makes it work again already repaired
+3. Every Move the script makes will be reflected in the Server Panel
+
+# Credits
+The script has been submitted by FiveM's only anti-cheat, [fiveguard.net](https://fiveguard.net/)
+
+#New Features Credits
+[Discord: Tronco (perttex),]
