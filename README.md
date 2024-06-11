@@ -16,3 +16,6 @@ The script has been submitted by FiveM's only anti-cheat, [fiveguard.net](https:
 
 #New Features Credits
 [Discord: Trunk (perttex),]
+
+
+![image](https://github.com/sebafreitas/CipherScanner/assets/74267616/3a214b55-4bb6-4169-90aa-2380664431ac)
